@@ -48,6 +48,33 @@ http://127.0.0.1:5173
 - 주방 HMI: 주문 큐, 공정 단계, 웍 제어 시뮬레이터 상태
 - 점주 운영: KPI, 동기화 상태, 리포트 다운로드 흐름
 
+## Docker 배포 (외부 URL 접속)
+
+`prototype` 빌드를 nginx 정적 서버로 패키징해 외부에서 접속할 수 있도록 한다.
+멀티스테이지 빌드(`node:20` 빌드 → `nginx:1.27` 서빙)로 `dist/`만 이미지에 담는다.
+
+```powershell
+# 빌드 + 백그라운드 실행
+docker compose up -d --build
+
+# 상태 확인
+docker compose ps
+
+# 종료
+docker compose down
+```
+
+접속 주소:
+
+```text
+http://<호스트 IP>:8080
+```
+
+- 컨테이너는 `0.0.0.0`에 바인딩되어 같은 네트워크의 다른 기기에서 호스트 IP로 접속할 수 있다.
+- 공인망 노출이 필요하면 호스트 방화벽에서 `8080/tcp`를 허용하고, 공유기는 외부 포트를 호스트 `8080`으로 포워딩한다.
+- 노출 포트는 `HOST_PORT` 환경변수로 변경한다. 예: `$env:HOST_PORT=80; docker compose up -d`
+- SPA 라우팅 폴백, gzip, 에셋 장기 캐시, 기본 보안 헤더는 `deploy/nginx.conf`에 정의되어 있다.
+
 ## Git 운영
 
 - 코드 Git: `C:\projects\SMART_KITCHEN`

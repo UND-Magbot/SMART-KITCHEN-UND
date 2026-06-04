@@ -1,0 +1,27 @@
+# 빌드 컨텍스트에서 제외 (이미지 크기·빌드 속도 최적화)
+node_modules
+dist
+.git
+.gitignore
+
+# 문서·에이전트 도구·검증 산출물 (앱 빌드와 무관)
+SMART_Docs
+.claude
+.codex
+.mcp.json
+AGENTS.md
+captures
+.playwright-mcp
+
+# 로그·임시
+*.log
+tmp
+temp
+
+# 루트 검증 스크린샷 (public/ 하위 에셋은 빌드에 필요하므로 루트만 제외)
+/*.png
+
+# Docker 관련 자기 자신
+Dockerfile
+docker-compose.yml
+.dockerignore
