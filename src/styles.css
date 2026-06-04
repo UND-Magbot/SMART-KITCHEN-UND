@@ -3963,6 +3963,17 @@ button {
   padding: 4px 12px;
 }
 
+/* 헤더 — WOK 전담 / 관리자 권한 칩 (mockup 헤더 정합) */
+.wok-pill,
+.admin-pill {
+  background: rgba(77, 155, 255, 0.08);
+  border: 1px solid rgba(77, 155, 255, 0.45);
+  border-radius: 999px;
+  color: var(--info);
+  font-weight: 700;
+  padding: 4px 12px;
+}
+
 .alarm-bell {
   position: relative;
 }
@@ -4828,14 +4839,16 @@ i.lv-low {
 }
 
 .mm-card {
-  align-items: center;
+  align-content: start;
   background: var(--hmi-panel);
   border: 1px solid var(--hmi-line-soft);
   border-radius: 12px;
   cursor: pointer;
-  display: flex;
-  gap: 10px;
-  padding: 11px;
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  min-height: 78px;
+  padding: 12px;
   position: relative;
   text-align: left;
 }
@@ -4846,25 +4859,18 @@ i.lv-low {
 }
 
 .mm-thumb {
-  align-items: center;
-  background: #2a2018;
-  border-radius: 9px;
-  color: var(--orange);
-  display: flex;
-  height: 38px;
-  justify-content: center;
-  width: 38px;
+  display: none;
 }
 
-.mm-card strong {
-  display: block;
+.mm-name {
+  color: var(--hmi-text);
   font-size: 14px;
+  font-weight: 850;
+  line-height: 1.2;
 }
 
-.mm-card small {
+.mm-card.on .mm-name {
   color: var(--orange);
-  font-size: 13px;
-  font-weight: 700;
 }
 
 .mm-cat {
@@ -4872,8 +4878,14 @@ i.lv-low {
   border-radius: 999px;
   color: var(--hmi-dim);
   font-size: 10px;
-  margin-left: auto;
   padding: 2px 8px;
+}
+
+.mm-price {
+  color: var(--orange);
+  font-size: 13px;
+  font-weight: 800;
+  margin-top: 2px;
 }
 
 .md-preview {
@@ -5381,6 +5393,40 @@ i.lv-low {
   border: 1px solid rgba(255, 61, 0, 0.4);
 }
 
+/* 대기 col3 — 조리중 실시간 단계 흐름 (진행바 + 메타 + 현재단계 + 트레일) */
+.qs-cooking .bar {
+  margin-top: 2px;
+}
+
+.qs-meta {
+  align-items: baseline;
+  color: var(--hmi-dim);
+  display: flex;
+  font-size: 11px;
+  font-weight: 700;
+  justify-content: space-between;
+}
+
+.qs-now {
+  color: var(--hmi-dim);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.qs-now b {
+  color: var(--orange);
+}
+
+.qs-cooking .auto-trail {
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.qs-cooking .auto-trail .trail-chip {
+  font-size: 10px;
+}
+
 .qs-wait {
   background: var(--hmi-card);
   border: 1px solid var(--hmi-line);
@@ -5645,6 +5691,7 @@ i.lv-low {
 
 .gantt-axis {
   display: grid;
+  gap: 12px;
   grid-template-columns: 200px 1fr;
 }
 
@@ -5961,6 +6008,184 @@ i.lv-low {
   font-size: 12px;
 }
 
+/* ───── STOCK view (ui_kitchen_stock 정합) ───── */
+.stk-kpis {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(4, 1fr);
+  margin-bottom: 14px;
+}
+
+.stk-kpi {
+  background: var(--hmi-card);
+  border: 1px solid var(--hmi-line);
+  border-left-width: 3px;
+  border-radius: 11px;
+  display: grid;
+  gap: 3px;
+  padding: 12px 14px;
+}
+
+.stk-kpi > span {
+  color: var(--hmi-dim);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.stk-kpi strong {
+  color: var(--hmi-title);
+  font-size: 22px;
+  font-weight: 850;
+}
+
+.stk-kpi small {
+  color: var(--hmi-dim-2);
+  font-size: 10px;
+}
+
+.stk-kpi.warn {
+  border-left-color: #f5af32;
+}
+.stk-kpi.warn strong {
+  color: #f5af32;
+}
+.stk-kpi.danger {
+  border-left-color: var(--danger);
+}
+.stk-kpi.danger strong {
+  color: var(--danger);
+  font-size: 18px;
+}
+.stk-kpi.info {
+  border-left-color: var(--info);
+}
+.stk-kpi.ok {
+  border-left-color: var(--success);
+}
+.stk-kpi.ok strong {
+  color: var(--success);
+}
+
+.stk-list {
+  display: grid;
+  gap: 10px;
+}
+
+.stk-item {
+  background: var(--hmi-panel);
+  border: 1px solid var(--hmi-line-soft);
+  border-radius: 11px;
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+}
+
+.stk-item.low {
+  border-color: rgba(245, 175, 50, 0.4);
+}
+
+.stk-item.empty {
+  border-color: rgba(255, 90, 77, 0.5);
+}
+
+.stk-head {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.stk-name {
+  color: var(--hmi-text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.stk-val {
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.stk-val.lv-low {
+  color: #f5af32;
+}
+
+.stk-val.lv-empty {
+  color: var(--danger);
+}
+
+.stk-bar {
+  background: #0c121a;
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.stk-bar i {
+  border-radius: 999px;
+  display: block;
+  height: 100%;
+}
+
+.stk-bar i.lv-low {
+  background: #f5af32;
+}
+
+.stk-bar i.lv-empty {
+  background: var(--danger);
+}
+
+.stk-foot {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.stk-status {
+  color: var(--hmi-dim);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.stk-status.low {
+  color: #f5af32;
+}
+
+.stk-status.empty {
+  color: var(--danger);
+}
+
+.stk-acts {
+  display: flex;
+  flex-shrink: 0;
+  gap: 7px;
+}
+
+.stk-inject,
+.stk-refill {
+  background: var(--hmi-card);
+  border: 1px solid var(--hmi-line);
+  border-radius: 8px;
+  color: var(--hmi-text);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  min-height: 32px;
+  padding: 5px 14px;
+}
+
+.stk-inject:disabled {
+  color: var(--hmi-dim-2);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.stk-refill.hot {
+  background: rgba(245, 175, 50, 0.14);
+  border-color: #f5af32;
+  color: #f5af32;
+}
+
 /* ───── STOCK view ───── */
 .stock-grid {
   display: grid;
@@ -6040,7 +6265,90 @@ i.lv-low {
 .alarm-grid {
   display: grid;
   gap: 14px;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.85fr);
+}
+
+/* 알람 센터 — 좌측 로그 헤더(범례 + 미확인/모두확인) (ui_kitchen_alarm 정합) */
+.alarm-log-head {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.alh-left {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.alh-left h3 {
+  font-size: 14px;
+  margin: 0;
+}
+
+.al-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.al-legend .lg {
+  align-items: center;
+  color: var(--hmi-dim);
+  display: flex;
+  font-size: 11px;
+  font-weight: 700;
+  gap: 5px;
+}
+
+.al-legend .lg::before {
+  border-radius: 50%;
+  content: "";
+  height: 8px;
+  width: 8px;
+}
+
+.al-legend .lg.k-done::before {
+  background: var(--success);
+}
+
+.al-legend .lg.k-blue::before {
+  background: #5b9dff;
+}
+
+.al-legend .lg.k-warn::before {
+  background: #f5af32;
+}
+
+.al-legend .lg.k-error::before {
+  background: #ff5a4d;
+}
+
+.al-legend .lg.k-orange::before {
+  background: var(--orange);
+}
+
+.al-legend .lg.k-purple::before {
+  background: #b98bff;
+}
+
+.alh-right {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.al-ack {
+  background: var(--hmi-panel);
+  border: 1px solid var(--hmi-line);
+  border-radius: 8px;
+  color: var(--hmi-text);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 14px;
 }
 
 .alarm-log,
@@ -9039,43 +9347,52 @@ i.lv-low {
   text-align: center;
 }
 
-/* 운영 관제 통합 콘솔 (주문·결제 POS + 매장 전체 운영 현황) */
-.owner-console {
+/* 운영 관제 — 준비 중 placeholder (주문·결제/운영 현황 탭 UI 제거) */
+.surface-coming-soon {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 12px;
+  place-items: center;
   min-height: 0;
+  padding: 32px;
 }
-.owner-tabs {
+.coming-soon-card {
   display: flex;
-  gap: 8px;
-}
-.owner-tabs button {
+  flex-direction: column;
   align-items: center;
+  gap: 14px;
+  max-width: 460px;
+  padding: 48px 40px;
+  border: 1px solid var(--night-line);
+  border-radius: 18px;
   background: var(--night-2);
-  border: 1px solid #2d394a;
-  border-radius: 10px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  display: flex;
-  font-size: 14px;
-  font-weight: 660;
-  gap: 7px;
-  padding: 9px 16px;
+  text-align: center;
 }
-.owner-tabs button.active {
+.coming-soon-icon {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
   background: rgba(255, 99, 51, 0.12);
-  border-color: var(--orange);
+  color: var(--orange);
+}
+.coming-soon-eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--orange);
+}
+.coming-soon-card h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 760;
   color: #fff;
 }
-.owner-console-body {
-  min-height: 0;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr);
-}
-.owner-console-body .pos-screen,
-.owner-console-body .owner-screen {
-  min-height: 0;
+.coming-soon-card p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text-secondary);
 }
 
 /* 주방 HMI 운영 메뉴 — 자동/수동 통합 모드 세그먼트 */
@@ -9084,40 +9401,64 @@ i.lv-low {
   flex-direction: column;
   gap: 16px;
 }
+/* 운영 모드 세그먼트 (operate_auto/manual mockup 정합 — 아이콘 박스 + 라벨 세로 + 자동 초록/수동 앰버) */
 .mode-segment {
   display: grid;
   gap: 10px;
   grid-template-columns: 1fr 1fr;
+  max-width: 760px;
 }
-.mode-segment button {
+.mode-segment .mode-tab {
   align-items: center;
-  background: var(--night-2);
-  border: 1px solid #2d394a;
+  background: var(--hmi-panel);
+  border: 1px solid var(--hmi-line);
   border-radius: 12px;
-  color: var(--text-secondary);
+  color: var(--hmi-dim);
   cursor: pointer;
   display: flex;
-  gap: 10px;
-  justify-content: center;
-  padding: 14px 18px;
+  gap: 12px;
+  justify-content: flex-start;
+  min-height: 62px;
+  padding: 12px 16px;
+  text-align: left;
 }
-.mode-segment button > span {
+.mode-segment .mt-ic {
+  align-items: center;
+  border: 1.5px solid currentColor;
+  border-radius: 8px;
   display: flex;
-  flex-direction: column;
+  flex-shrink: 0;
+  height: 30px;
+  justify-content: center;
+  width: 30px;
+}
+.mode-segment .mt-lab {
+  display: grid;
+  gap: 2px;
+}
+.mode-segment .mt-lab b {
+  color: var(--hmi-title);
   font-size: 16px;
-  font-weight: 720;
-  line-height: 1.25;
+  font-weight: 850;
 }
-.mode-segment button small {
-  color: var(--text-tertiary);
-  font-size: 12px;
-  font-weight: 500;
+.mode-segment .mt-lab small {
+  color: var(--hmi-dim);
+  font-size: 11px;
+  font-weight: 600;
 }
-.mode-segment button.active {
-  background: rgba(255, 99, 51, 0.12);
-  border-color: var(--orange);
-  color: #fff;
+.mode-segment .mode-tab.auto.active {
+  background: rgba(61, 214, 140, 0.08);
+  border-color: var(--success);
+  color: var(--success);
 }
-.mode-segment button.active small {
-  color: #ffb899;
+.mode-segment .mode-tab.auto.active .mt-lab b {
+  color: var(--success);
+}
+.mode-segment .mode-tab.manual.active {
+  background: rgba(245, 175, 50, 0.08);
+  border-color: #f5af32;
+  color: #f5af32;
+}
+.mode-segment .mode-tab.manual.active .mt-lab b {
+  color: #f5af32;
 }

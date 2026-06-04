@@ -963,7 +963,7 @@ function QueueView({ system }) {
   const cooking = view.cooking;
   return (
     <div className="hmi-view queue">
-      <ProcessStepper activeStage={incoming ? 1 : view.cooking[0]?.stageIndex ?? 1} />
+      <ProcessStepper activeStage={view.cooking[0]?.stageIndex ?? (incoming ? 1 : 1)} />
       <div className="queue-grid q3">
         {/* col1: 신규 주문 수신 */}
         <section className={`new-order ${incoming ? "has" : "empty"}`}>
@@ -1073,9 +1073,17 @@ function QueueView({ system }) {
                 <span className="badge-orange sm">조리중</span>
               </div>
               <p>{o.summary}</p>
-              <small className="accent">
-                WOK 0{o.stationId} · {Math.round(o.progress)}% · {fmtEta(o.remainSec)} 후 완료
-              </small>
+              <ProgressBar value={o.progress} label={`${o.code} 진행률`} />
+              <div className="qs-meta">
+                <span className="accent">
+                  WOK 0{o.stationId} · {Math.round(o.progress)}%
+                </span>
+                <span>{fmtEta(o.remainSec)} 후 완료</span>
+              </div>
+              <div className="qs-now">
+                현재 단계 · <b>{o.nextStepLabel}</b>
+              </div>
+              <AutoStageTrail stageIndex={o.stageIndex} />
             </div>
           ))}
           <p className="section-mini blue">운영 관제 배정 순서 · {view.queued.length}건</p>
@@ -1109,7 +1117,9 @@ function RecipeView({ system }) {
   const cooking = system.view.cooking[0];
   const recipe = RECIPES.default;
   const totalSec = recipe.totalSec;
-  const ticks = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270];
+  // 간트 축: 마지막 단계(offset+dur)까지 포함하도록 max 기준 사용 — 막대가 트랙을 벗어나지 않게
+  const maxSec = Math.max(330, ...recipe.timeline.map((r) => r.offset + r.dur));
+  const ticks = Array.from({ length: Math.round(maxSec / 30) + 1 }, (_, i) => i * 30);
   const progress = cooking ? Math.round(cooking.progress) : 0;
   const stageCount = recipe.timeline.length;
   const curStage = (cooking?.stageIndex ?? 0) + 1;
@@ -1166,7 +1176,7 @@ function RecipeView({ system }) {
                   <div className="gantt-track">
                     <span
                       className={`gantt-bar kind-${row.kind}`}
-                      style={{ left: `${(row.offset / totalSec) * 100}%`, width: `${(row.dur / totalSec) * 100}%` }}
+                      style={{ left: `${(row.offset / maxSec) * 100}%`, width: `${(row.dur / maxSec) * 100}%` }}
                     >
                       {row.dur}s
                     </span>
@@ -1259,75 +1269,103 @@ function RecipeView({ system }) {
 
 /* ───────────────────────── STOCK ───────────────────────── */
 function StockView({ system }) {
-  const { tanks, powders, refillTank } = system;
+  const { tanks, powders, injectTank, refillTank, injectPowder, refillPowder } = system;
+  const sauces = tanks.slice(0, 4);
+  const pdrs = powders.slice(0, 4);
+  const all = [...sauces, ...pdrs];
+  const warnN = all.filter((x) => x.pct <= 30).length;
+  const orderN = all.filter((x) => x.pct <= 15).length;
+  const okN = all.filter((x) => x.pct > 30).length;
+  const lowest = all.reduce((a, b) => (b.pct < a.pct ? b : a), all[0]);
+
+  // 재고 항목 — 잔량 바 + 값 + 상태 + 투입/보충 (ui_kitchen_stock 정합)
+  const renderItem = (item, prefix, unit, onInject, onRefill) => {
+    const level = item.pct <= 12 ? "empty" : item.pct <= 30 ? "low" : item.pct <= 55 ? "mid" : "ok";
+    const val = unit === "g" ? `${Math.round((item.pct / 100) * (item.capacityG ?? 1000))} g` : `${Math.round(item.pct)}%`;
+    const cap = unit === "g" ? `${(item.capacityG ?? 1000) / 1000} kg` : `${item.capacityKg} L`;
+    const status =
+      level === "empty" ? "소진 · 투입 불가" : level === "low" ? "보충 권장" : level === "mid" ? "주의 · 곧 보충" : "충분";
+    return (
+      <div className={`stk-item ${level}`} key={`${prefix}${item.id}`}>
+        <div className="stk-head">
+          <span className="stk-name">
+            {prefix}
+            {item.id} · {item.name}
+          </span>
+          <strong className={`stk-val lv-${level}`}>{val}</strong>
+        </div>
+        <div className="stk-bar">
+          <i className={`lv-${level}`} style={{ width: `${item.pct}%` }} />
+        </div>
+        <div className="stk-foot">
+          <small className={`stk-status ${level}`}>
+            {status} · {cap}
+          </small>
+          <div className="stk-acts">
+            <button className="stk-inject" type="button" disabled={level === "empty"} onClick={() => onInject(item.id)}>
+              투입
+            </button>
+            <button
+              className={`stk-refill ${level === "low" || level === "empty" ? "hot" : ""}`}
+              type="button"
+              onClick={() => onRefill(item.id)}
+            >
+              보충
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="hmi-view stock">
       <div className="view-title">
-        <h2>재고 관리 — 소스 통 · 분말 디스펜서</h2>
-        <p>실시간 잔량 모니터링 · 30% 이하 자동 발주 대기</p>
+        <h2>
+          재고 <span className="badge-orange sm">STOCK</span>
+        </h2>
+        <p>WOK 01 전담 · 소스 통 4구 · 분말 디스펜서 4구 (자기 오토웍 소요량) · 완료 시 자동 차감</p>
+      </div>
+      <div className="stk-kpis">
+        <div className="stk-kpi warn">
+          <span>저장량 경고</span>
+          <strong>{warnN} 건</strong>
+          <small>30% 이하 · 보충 필요</small>
+        </div>
+        <div className="stk-kpi danger">
+          <span>소진 임박</span>
+          <strong>{lowest.name}</strong>
+          <small>잔량 최저 · 투입 주의</small>
+        </div>
+        <div className="stk-kpi info">
+          <span>자동 발주 대기</span>
+          <strong>{orderN} 건</strong>
+          <small>운영 관제 발주 요청</small>
+        </div>
+        <div className="stk-kpi ok">
+          <span>정상 재고</span>
+          <strong>{okN} / 8</strong>
+          <small>소스 · 분말 통 정상</small>
+        </div>
       </div>
       <div className="stock-grid">
         <section className="stock-col">
           <header>
-            <h3>5구 소스 통 — 소스 / 액체</h3>
-            <span className="pill outline">실시간</span>
+            <h3>
+              소스 통 4구 <small>% · SDP-01</small>
+            </h3>
+            <span className="pill outline">임계 30% · 자동 차감</span>
           </header>
-          {tanks.map((t) => {
-            const level = t.pct <= 30 ? "low" : t.pct <= 55 ? "mid" : "ok";
-            return (
-              <div className="stock-line" key={t.id}>
-                <div className="sl-head">
-                  <span>
-                    #{t.id} {t.note}
-                  </span>
-                  <strong className={`lv-${level}`}>{Math.round(t.pct)}%</strong>
-                </div>
-                <div className="tank-bar">
-                  <i className={`lv-${level}`} style={{ width: `${t.pct}%` }} />
-                </div>
-                <div className="sl-foot">
-                  <small>
-                    {((t.pct / 100) * t.capacityKg).toFixed(2)} / {t.capacityKg} L
-                  </small>
-                  {level === "low" ? (
-                    <button className="refill-btn" type="button" onClick={() => refillTank(t.id)}>
-                      보충
-                    </button>
-                  ) : (
-                    <small className="green">정상</small>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          <div className="stk-list">{sauces.map((t) => renderItem(t, "#", "%", injectTank, refillTank))}</div>
         </section>
         <section className="stock-col">
           <header>
-            <h3>분말 디스펜서 — 향신료 / 분말 재료</h3>
-            <span className="pill outline">실시간</span>
+            <h3>
+              분말 디스펜서 4구 <small>g · PDP-01</small>
+            </h3>
+            <span className="pill outline">임계 30% · 자동 차감</span>
           </header>
-          {powders.map((p) => {
-            const level = p.pct <= 30 ? "low" : p.pct <= 55 ? "mid" : "ok";
-            return (
-              <div className="stock-line" key={p.id}>
-                <div className="sl-head">
-                  <span>
-                    P{p.id} {p.name}
-                  </span>
-                  <strong className={`lv-${level}`}>{Math.round(p.pct)}%</strong>
-                </div>
-                <div className="tank-bar">
-                  <i className={`lv-${level}`} style={{ width: `${p.pct}%` }} />
-                </div>
-                <div className="sl-foot">
-                  <small>
-                    {Math.round((p.pct / 100) * p.capacityG)} / {p.capacityG} g
-                  </small>
-                  {level === "low" ? <small className="accent">● 자동 발주 대기</small> : <small className="green">정상</small>}
-                </div>
-              </div>
-            );
-          })}
+          <div className="stk-list">{pdrs.map((p) => renderItem(p, "P", "g", injectPowder, refillPowder))}</div>
         </section>
       </div>
     </div>
@@ -1353,19 +1391,45 @@ function AlarmView({ system }) {
     ["점주 모바일 푸시", "이상/경고만 발송 · 정상 단계는 미발송", Bell, "orange"],
     ["본사 클라우드 로그", "전 단계 자동 기록 · 90일 보관", Cloud, "blue"],
   ];
+  const legend = [
+    ["오류", "k-error"],
+    ["경고", "k-warn"],
+    ["픽업", "k-orange"],
+    ["완료", "k-done"],
+    ["정보", "k-blue"],
+    ["AI", "k-purple"],
+  ];
   return (
     <div className="hmi-view alarm">
       <div className="view-title">
         <h2>
-          단계 완료 / 작업 알림 시스템 <span className="badge-orange sm">ALARM CENTER</span>
+          알람 센터 <span className="badge-orange sm">ALARM</span>
         </h2>
-        <p>각 단계 완료 시 '토스트 · 사운드 · 음성 호출 · 점주 푸시 · 본사 로그' 5채널로 동시 알림 발송</p>
+        <p>WOK 01 발생 알람 · 실시간 대응 (매장 집계는 운영 관제)</p>
       </div>
       <div className="alarm-grid">
         <section className="alarm-log">
-          <header>
-            <h3>실시간 알림 로그</h3>
-            <span className="pill outline">{system.alarms.length}건</span>
+          <header className="alarm-log-head">
+            <div className="alh-left">
+              <h3>실시간 알림 로그</h3>
+              <div className="al-legend">
+                {legend.map(([lb, cls]) => (
+                  <span className={`lg ${cls}`} key={cls}>
+                    {lb}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="alh-right">
+              {system.view.pendingAlarms > 0 ? (
+                <span className="pill danger">미확인 {system.view.pendingAlarms}</span>
+              ) : (
+                <span className="pill outline">정상</span>
+              )}
+              <button className="al-ack" type="button" onClick={() => system.acknowledgeAlarms()}>
+                모두 확인
+              </button>
+            </div>
           </header>
           <div className="alarm-scroll">
             {system.alarms.map((a) => {
@@ -1391,7 +1455,7 @@ function AlarmView({ system }) {
         <aside className="alarm-side">
           <section className="alarm-channels">
             <header>
-              <h3>알림 발송 채널 (5채널 동시 발송)</h3>
+              <h3>발송 채널 · 5채널 동시</h3>
               <span className="badge-green sm">5 / 5 ON</span>
             </header>
             {channels.map(([name, desc, Icon, tone]) => (
@@ -1404,24 +1468,6 @@ function AlarmView({ system }) {
                 <span className="ch-toggle on" />
               </div>
             ))}
-          </section>
-          <section className="alarm-types">
-            <header>
-              <h3>알림 유형 (색상 / 우선순위 구분)</h3>
-            </header>
-            <div className="types-grid">
-              {Object.values(ALARM_KINDS)
-                .filter((v, i, arr) => arr.findIndex((x) => x.label === v.label) === i)
-                .map((k) => {
-                  const Icon = k.icon;
-                  return (
-                    <div className={`type-card ${k.cls}`} key={k.label}>
-                      <Icon size={15} />
-                      <strong>{k.label}</strong>
-                    </div>
-                  );
-                })}
-            </div>
           </section>
         </aside>
       </div>
@@ -1515,24 +1561,34 @@ function ControlView({ system }) {
     <div className="hmi-view operate">
       <div className="mode-segment" role="tablist" aria-label="조리 운영 모드">
         <button
-          className={mode === "auto" ? "active" : ""}
+          className={`mode-tab auto ${mode === "auto" ? "active" : ""}`}
           onClick={() => mode !== "auto" && setMode("auto")}
           role="tab"
           aria-selected={mode === "auto"}
           type="button"
         >
-          <Brain size={18} />
-          <span>자동 <small>AI 자동 정렬 · 배정 · 픽업</small></span>
+          <span className="mt-ic">
+            <Brain size={18} />
+          </span>
+          <span className="mt-lab">
+            <b>자동</b>
+            <small>운영 관제 배정 · 담당 WOK 자동 조리 · 픽업</small>
+          </span>
         </button>
         <button
-          className={mode === "manual" ? "active" : ""}
+          className={`mode-tab manual ${mode === "manual" ? "active" : ""}`}
           onClick={() => mode !== "manual" && setMode("manual")}
           role="tab"
           aria-selected={mode === "manual"}
           type="button"
         >
-          <Hand size={18} />
-          <span>수동 <small>운영자 직접 WOK 제어</small></span>
+          <span className="mt-ic">
+            <Hand size={18} />
+          </span>
+          <span className="mt-lab">
+            <b>수동</b>
+            <small>운영자 직접 WOK 제어 · 관리자 권한</small>
+          </span>
         </button>
       </div>
       {mode === "auto" ? <AutoView system={system} /> : <ManualView system={system} />}

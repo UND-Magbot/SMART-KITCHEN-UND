@@ -89,6 +89,7 @@ logs/
 # Playwright MCP / 검증 산출물 (scripts/clean-captures.ps1, Stop hook 이 정리)
 .playwright-mcp/
 captures/
+
 # 루트에 임시로 찍힌 검증 스크린샷 (소스 미참조)
 # public/, src/ 등 하위 디렉터리의 에셋은 / 접두 패턴이라 영향 없음
 /*.png

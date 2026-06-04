@@ -1,11 +1,8 @@
 import {
-  AlertTriangle,
   ArrowLeft,
-  BarChart3,
   Bell,
   CheckCircle2,
   Clock3,
-  CreditCard,
   Droplet,
   Flame,
   Minus,
@@ -24,7 +21,6 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import KitchenHmi from "./kitchen/KitchenHmi";
-import PosView from "./pos/PosView";
 import { placeOrder as placeKitchenOrder } from "./kitchen/useKitchenSystem";
 
 const surfaces = [
@@ -811,13 +807,6 @@ const sizeOptions = [
 const setOptions = [
   { key: "단품", delta: 0 },
   { key: "세트", delta: 3000 },
-];
-
-const ownerMetrics = [
-  ["일매출", "1,284,000원", "+12.4%"],
-  ["주문 수", "126건", "+18건"],
-  ["취소율", "2.1%", "-0.8%"],
-  ["방문 고객", "94명", "+9명"],
 ];
 
 const recommendation = { menuId: "dumpling" };
@@ -2621,58 +2610,21 @@ function CourseProgress({ copy, course, language, onAdvance, statusIndex }) {
   );
 }
 
-// 운영 관제 = 주문·결제(POS) + 매장 전체 통합 운영 현황 콘솔
+// 운영 관제 — 준비 중 (주문·결제/운영 현황 탭 UI 제거, 추후 재오픈 예정)
 function OwnerConsole() {
-  const [tab, setTab] = useState("pos");
   return (
-    <section className="owner-console">
-      <nav className="owner-tabs" role="tablist" aria-label="운영 관제 메뉴">
-        <button className={tab === "pos" ? "active" : ""} onClick={() => setTab("pos")} role="tab" type="button">
-          <CreditCard size={16} /> 주문 · 결제
-        </button>
-        <button className={tab === "dashboard" ? "active" : ""} onClick={() => setTab("dashboard")} role="tab" type="button">
-          <BarChart3 size={16} /> 운영 현황
-        </button>
-      </nav>
-      <div className="owner-console-body">
-        {tab === "pos" ? <PosView /> : <OwnerDashboard />}
-      </div>
-    </section>
-  );
-}
-
-function OwnerDashboard() {
-  return (
-    <section className="owner-screen">
-      <div className="owner-dashboard">
-        <header>
-          <div>
-            <span>Owner Dashboard</span>
-            <h2>오늘 운영 현황</h2>
-          </div>
-          <button type="button">리포트 다운로드</button>
-        </header>
-        <div className="metric-grid">
-          {ownerMetrics.map(([label, value, delta]) => (
-            <div className="metric-card" key={label}>
-              <span>{label}</span>
-              <strong>{value}</strong>
-              <b>{delta}</b>
-            </div>
-          ))}
-        </div>
-        <div className="owner-row">
-          <div>
-            <BarChart3 size={26} />
-            <strong>실시간 주문</strong>
-            <p>주문 12건 · 지연 2건 · 취소 1건</p>
-          </div>
-          <div>
-            <AlertTriangle size={26} />
-            <strong>재고 경고</strong>
-            <p>양조, 소스 베이스 보충 필요</p>
-          </div>
-        </div>
+    <section className="surface-coming-soon" aria-live="polite">
+      <div className="coming-soon-card">
+        <span className="coming-soon-icon" aria-hidden="true">
+          <Clock3 size={34} />
+        </span>
+        <span className="coming-soon-eyebrow">운영 관제</span>
+        <h2>준비 중입니다</h2>
+        <p>
+          전 오토웍·주문·큐·재고·매출을 통합 관제하는 화면을 준비하고 있습니다.
+          <br />
+          빠른 시일 내에 제공할 예정입니다.
+        </p>
       </div>
     </section>
   );
