@@ -1,0 +1,99 @@
+# SMART Kitchen code repository ignore rules
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.local
+*.secret
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+
+# Node / frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+dist/
+build/
+.next/
+.nuxt/
+.svelte-kit/
+coverage/
+
+# General build and cache output
+out/
+tmp/
+temp/
+.cache/
+.parcel-cache/
+.turbo/
+.omd/runs/
+.omd/cache/
+
+# Generated document artifacts are managed in SMART_Docs
+output/
+develop-Document/
+*.pdf
+*.docx
+*.pptx
+*.xlsx
+
+# 프로젝트 문서 (레포에 업로드 제외)
+SMART_Docs/
+
+# 에이전트 도구·설정 (로컬 개발 도구, 앱 코드와 무관)
+.claude/
+.codex/
+.mcp.json
+AGENTS.md
+
+# Logs
+logs/
+*.log
+
+# Docker and local runtime leftovers
+*.pid
+*.seed
+*.sqlite
+*.sqlite3
+*.db
+
+# Playwright MCP / 검증 산출물 (scripts/clean-captures.ps1, Stop hook 이 정리)
+.playwright-mcp/
+captures/
+# 루트에 임시로 찍힌 검증 스크린샷 (소스 미참조)
+# public/, src/ 등 하위 디렉터리의 에셋은 / 접두 패턴이라 영향 없음
+/*.png
+/hmi-*.png
+/pos-*.png
+/tablet-*.png
+/owner-*.png
+/_*.png
