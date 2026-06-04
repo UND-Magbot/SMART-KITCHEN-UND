@@ -31,6 +31,16 @@ SMART_Docs\Assets\Mockups
 
 고객 태블릿은 mockup 이미지를 단순히 보여주는 방식이 아니라, 태블릿에서 바로 사용할 수 있는 주문 UI로 코드 구현한다. 화면 주변의 참고 mockup 목록과 검증 패널은 제거하고, `고객 태블릿 / 주방 HMI / 점주 운영` 카테고리 내비게이션으로 전환한다.
 
+현재 프로토타입 범위:
+
+- 고객 태블릿: 실사용 UI, 메뉴/옵션/장바구니/주문 요청/주문 완료/직원 호출 흐름
+- 주방 HMI: 주문 큐, 공정 단계, 웍 제어 시뮬레이터 상태
+- 점주 운영: KPI, 동기화 상태, 리포트 다운로드 흐름
+
+## 로컬 실행
+
+의존성을 설치한 뒤 Vite 개발 서버를 실행한다.
+
 ```powershell
 npm.cmd install
 npm.cmd run dev
@@ -42,38 +52,23 @@ npm.cmd run dev
 http://127.0.0.1:5173
 ```
 
-현재 프로토타입 범위:
-
-- 고객 태블릿: 실사용 UI, 메뉴/옵션/장바구니/주문 요청/주문 완료/직원 호출 흐름
-- 주방 HMI: 주문 큐, 공정 단계, 웍 제어 시뮬레이터 상태
-- 점주 운영: KPI, 동기화 상태, 리포트 다운로드 흐름
-
-## Docker 배포 (외부 URL 접속)
-
-`prototype` 빌드를 nginx 정적 서버로 패키징해 외부에서 접속할 수 있도록 한다.
-멀티스테이지 빌드(`node:20` 빌드 → `nginx:1.27` 서빙)로 `dist/`만 이미지에 담는다.
+프로덕션 빌드는 아래 명령으로 확인한다.
 
 ```powershell
-# 빌드 + 백그라운드 실행
-docker compose up -d --build
-
-# 상태 확인
-docker compose ps
-
-# 종료
-docker compose down
+npm.cmd run build
 ```
 
-접속 주소:
+## Vercel 배포
 
-```text
-http://<호스트 IP>:8080
+Vercel 프로젝트는 Git 원격 저장소의 `prototype` 브랜치를 기준으로 배포한다.
+
+```powershell
+git checkout prototype
+git pull origin prototype
+git push origin prototype
 ```
 
-- 컨테이너는 `0.0.0.0`에 바인딩되어 같은 네트워크의 다른 기기에서 호스트 IP로 접속할 수 있다.
-- 공인망 노출이 필요하면 호스트 방화벽에서 `8080/tcp`를 허용하고, 공유기는 외부 포트를 호스트 `8080`으로 포워딩한다.
-- 노출 포트는 `HOST_PORT` 환경변수로 변경한다. 예: `$env:HOST_PORT=80; docker compose up -d`
-- SPA 라우팅 폴백, gzip, 에셋 장기 캐시, 기본 보안 헤더는 `deploy/nginx.conf`에 정의되어 있다.
+`prototype` 브랜치에 새 커밋이 push되면 Vercel에서 자동으로 새 배포가 생성된다. 배포 결과와 URL은 Vercel 프로젝트의 `Deployments` 탭에서 확인한다.
 
 ## Git 운영
 
@@ -81,26 +76,3 @@ http://<호스트 IP>:8080
 - 문서 Git: `C:\Workspace\Obsidian\PMO_Vault`
 
 코드 변경은 이 저장소에서 커밋한다. 문서, PMO, SSOT, 프롬프트, 자산, 레거시 스크립트 변경은 Vault 저장소에서 커밋한다.
-
-## 하네스 도구
-
-AI 하네스 검증을 위해 로컬 도구를 설치해 둔다.
-
-```powershell
-npm.cmd install
-npm.cmd run playwright:install
-python -m pip install -r requirements-harness.txt
-```
-
-사용 가능한 도구:
-
-- Playwright, Playwright MCP: 브라우저 점검, UI 스모크 테스트, 스크린샷 확인
-- axe-core, Lighthouse: 접근성 검증
-- lucide-static: SVG 아이콘 자산
-- pypdf, PyMuPDF, pdfplumber, reportlab: PDF 검토, 추출, 렌더링, 생성
-
-MCP 서버 설정은 `.mcp.json`에 있다.
-
-- `playwright`
-- `smart-kitchen-filesystem`: 이 코드 저장소와 `SMART_Docs`로 접근 범위를 제한한 파일 시스템 MCP
-
